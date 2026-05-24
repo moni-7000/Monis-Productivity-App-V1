@@ -83,33 +83,82 @@ timer_center_frame.place(relx=0.5, rely=0.5, anchor="center")
 
 entry=""
 #backButton1=ctk.CTkButton(calc_center_frame, text="BACK", command=main_menu_frame.tkraise)
-calc_entry = ctk.CTkEntry(calc_center_frame, width=180, textvariable=entry, justify="right")
+calc_entry = ctk.CTkEntry(calc_center_frame, width=175, textvariable=entry, justify="right", state="disabled")
 calc_entry.grid(row=1, column=0, columnspan=3)
 
-delete_button = ctk.CTkButton(calc_center_frame, width=50, text="<<")
+delete_button = ctk.CTkButton(calc_center_frame, width=50, text="<<", command=lambda: calculate("<<"))
 delete_button.grid(row=1, column=3)
 
 calc_label = ctk.CTkLabel(calc_center_frame, text="♡  CALCULATOR  ♡", font=("Times", 23,"bold"))
 calc_label.grid(row=0, columnspan=4, pady=20)
 
-buttonsxy = [(5,0,0), (5,1,"."), (5,2,"-"), (5,3,"="),
+buttonsxy = [(5,0,0), (5,1,"."), (5,2,"/"), (5,3,"="),
              (4,0,1), (4,1,2), (4,2,3), (4,3,"+"),
-             (3,0,4), (3,1,5), (3,2,6), (3,3,"X"),
+             (3,0,4), (3,1,5), (3,2,6), (3,3,"*"),
              (2,0,7), (2,1,8), (2,2,9), (2,3,"-"),
              ]
 
-buttonList =[]
+def calculate(val):
+    
+    operators = ["/", "+", "-", "*"]
+    
+        
+    if(val in operators or val == "."):
+        if ((calc_entry.get() == "") or (calc_entry.get()[-1] in operators)):
+            pass    
+        elif(val == "."):
+            text = calc_entry.get()
+            
+            for i in range (len(text) -1, -1, -1):
+                if text[i] in operators:
+                    index = i
+                    break
+                
+            if ("." in text[i+1:]):
+                pass
+            else:
+                calc_entry.configure(state="normal")
+                calc_entry.insert("end", str(val))
+                calc_entry.configure(state="disabled")
+                
+        else:
+            calc_entry.configure(state="normal")
+            calc_entry.insert("end", str(val))
+            calc_entry.configure(state="disabled")              
+    else:
+        if (val == "="):
+            result = calc_entry.get()
+            calc_entry.configure(state="normal")  
+            calc_entry.delete(0, "end")
+            calc_entry.insert(0, eval(result))
+            calc_entry.configure(state="disabled") 
+        elif(val == "<<"):
+            calc_entry.configure(state="normal")
+            calc_entry.delete(len(calc_entry.get()) - 1)
+            calc_entry.configure(state="disabled")     
+        else:
+            calc_entry.configure(state="normal")
+            calc_entry.insert("end", str(val))
+            calc_entry.configure(state="disabled")
+
+
+
 
 for b_row, b_col, val in buttonsxy:
-    myButton = ctk.CTkButton(calc_center_frame, width=50, text=val)
+    myButton = ctk.CTkButton(calc_center_frame, width=50, text=val, command=lambda v=val: calculate(v))
     myButton.grid(row=b_row, column=b_col, padx=7, pady=13)
-    buttonList.append(myButton)
 
+backButton1 = ctk.CTkButton(calculator_frame, text="BACK", command=main_menu_frame.tkraise)
+backButton1.place(relx=0.5, rely=0.85, anchor="center")
 
 
 #grid stuff onto todo list center frame
-testLabel2= ctk.CTkLabel(todo_center_frame, text="todo frame test")
-testLabel2.pack()
+testLabel2= ctk.CTkLabel(todo_center_frame, text="♡  TODAY'S TASKS  ♡", font=titleFont)
+testLabel2.pack(pady=20)
+
+taskFrame = ctk.CTkFrame(todo_center_frame, border_width=10, fg_color="#de6f92")
+taskFrame.pack()
+
 backButton2=ctk.CTkButton(todo_center_frame, text="BACK", command=main_menu_frame.tkraise)
 backButton2.pack(pady=10)
 
@@ -118,6 +167,11 @@ testLabel3= ctk.CTkLabel(timer_center_frame, text="timer frame test")
 testLabel3.pack()
 backButton3=ctk.CTkButton(timer_center_frame, text="BACK", command=main_menu_frame.tkraise)
 backButton3.pack(pady=10)
+
+
+
+
+
 
 
 
