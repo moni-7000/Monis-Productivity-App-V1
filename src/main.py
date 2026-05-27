@@ -1,4 +1,6 @@
 import customtkinter as ctk
+import textwrap
+import time
 
 def showFrame(frame):
     frame.tkraise()
@@ -34,6 +36,9 @@ todo_frame.grid(row=0, column=0, sticky="nsew")
 
 timer_frame = ctk.CTkFrame(root)
 timer_frame.grid(row=0, column=0, sticky="nsew")
+
+addTask_Frame = ctk.CTkFrame(root)
+addTask_Frame.grid(row=0, column=0, sticky="nsew")
     
     
 #make the custom fonts to reuse 
@@ -81,9 +86,7 @@ timer_center_frame.place(relx=0.5, rely=0.5, anchor="center")
 
 #Now create the calculator display
 
-entry=""
-#backButton1=ctk.CTkButton(calc_center_frame, text="BACK", command=main_menu_frame.tkraise)
-calc_entry = ctk.CTkEntry(calc_center_frame, width=175, textvariable=entry, justify="right", state="disabled")
+calc_entry = ctk.CTkEntry(calc_center_frame, width=175, justify="right", state="disabled")
 calc_entry.grid(row=1, column=0, columnspan=3)
 
 delete_button = ctk.CTkButton(calc_center_frame, width=50, text="<<", command=lambda: calculate("<<"))
@@ -92,12 +95,16 @@ delete_button.grid(row=1, column=3)
 calc_label = ctk.CTkLabel(calc_center_frame, text="♡  CALCULATOR  ♡", font=("Times", 23,"bold"))
 calc_label.grid(row=0, columnspan=4, pady=20)
 
+#Array of tuples to hold (row, col, button value)
 buttonsxy = [(5,0,0), (5,1,"."), (5,2,"/"), (5,3,"="),
              (4,0,1), (4,1,2), (4,2,3), (4,3,"+"),
              (3,0,4), (3,1,5), (3,2,6), (3,3,"*"),
              (2,0,7), (2,1,8), (2,2,9), (2,3,"-"),
              ]
 
+
+#Where val is the button the user pressed
+#Complete the appropriate operation
 def calculate(val):
     
     operators = ["/", "+", "-", "*"]
@@ -143,7 +150,7 @@ def calculate(val):
 
 
 
-
+#Use a loop to create each button on the calculator
 for b_row, b_col, val in buttonsxy:
     myButton = ctk.CTkButton(calc_center_frame, width=50, text=val, command=lambda v=val: calculate(v))
     myButton.grid(row=b_row, column=b_col, padx=7, pady=13)
@@ -152,15 +159,93 @@ backButton1 = ctk.CTkButton(calculator_frame, text="BACK", command=main_menu_fra
 backButton1.place(relx=0.5, rely=0.85, anchor="center")
 
 
-#grid stuff onto todo list center frame
-testLabel2= ctk.CTkLabel(todo_center_frame, text="♡  TODAY'S TASKS  ♡", font=titleFont)
-testLabel2.pack(pady=20)
 
-taskFrame = ctk.CTkFrame(todo_center_frame, border_width=10, fg_color="#de6f92")
-taskFrame.pack()
+#Moving onto the Todo list
+#grid todo menu widgets onto todo list center frame
+todoLabel= ctk.CTkLabel(todo_center_frame, text="♡  TODAY'S TASKS  ♡", font=titleFont)
+todoLabel.pack(pady=20)
 
-backButton2=ctk.CTkButton(todo_center_frame, text="BACK", command=main_menu_frame.tkraise)
+#create a seperate task frame to hold tasks
+taskFrame = ctk.CTkFrame(todo_center_frame, border_width=0, fg_color="#de6f92", width=300, height=200)
+taskFrame.pack(pady=10)
+
+#num of tasks at a given time
+taskCount = 0
+#current row to add a new task (no overlapping)
+taskRow = 0
+#maximum num of tasks
+maxTasks = 5
+
+def taskRemoved():
+    global taskCount
+    taskCount -= 1
+
+def addTask():
+    global taskRow
+    global maxTasks
+    global taskCount
+    
+    taskName = taskEntry.get()
+    #wrap text to sustain window format
+    wrappedTask = textwrap.fill(taskName, 30)
+    
+    if (taskName == "" or taskCount == maxTasks or len(taskName) > 75):
+        if (taskCount == maxTasks):
+            taskEntry.delete(0, "end")
+            taskEntry.insert(0, "Maximum tasks reached!")
+            taskEntry.after(1000, lambda: taskEntry.delete(0,"end"))
+        else:
+            taskEntry.delete(0, "end")
+            taskEntry.insert(0, "Invallid task!")
+            taskEntry.after(1000, lambda: taskEntry.delete(0,"end"))
+        return
+    else:
+        taskEntry.delete(0, "end")
+    
+        newTask = ctk.CTkLabel(taskFrame, text=wrappedTask)
+        newTask.grid(row=taskRow, column=0, padx=10, pady=10, sticky="w")
+    
+        doneButton= ctk.CTkButton(taskFrame, text="✓", width = 20, command= lambda: (newTask.destroy(), doneButton.destroy(), taskRemoved()))
+        doneButton.grid(row=taskRow, column=1, padx=10, pady=10)
+    
+        taskRow += 1
+        taskCount += 1
+    
+
+#center frame for the add task frame
+add_task_center_frame = ctk.CTkFrame(addTask_Frame, fg_color="transparent", border_width=0)
+add_task_center_frame.place(relx=0.5, rely=0.5, anchor="center")
+
+taskHelpLabel = ctk.CTkLabel(add_task_center_frame, text="♡ Tasks may be <= 75 characters!\n♡ The maximum # of tasks is 5!", font=("times", 23))
+taskHelpLabel.pack(pady=30)
+
+taskEntry = ctk.CTkEntry(add_task_center_frame, width=200, justify="right", state="normal")
+taskEntry.pack(pady=10)
+
+#button that makes the real task
+createTaskButton = ctk.CTkButton(add_task_center_frame, text=" ADD TO TASK LIST ", command=addTask)
+createTaskButton.pack(pady=30)
+
+backButton2=ctk.CTkButton(add_task_center_frame, text="BACK", command=todo_frame.tkraise)
 backButton2.pack(pady=10)
+
+#the button that takes you to the frame to make the task
+gotoAddTaskButton = ctk.CTkButton(todo_center_frame, text=" ADD TASK", font=bodyFont, command=addTask_Frame.tkraise)
+gotoAddTaskButton.pack(pady=20)
+
+backButton3=ctk.CTkButton(todo_center_frame, text="BACK", command=main_menu_frame.tkraise)
+backButton3.pack(pady=10)
+
+
+
+
+
+
+
+
+
+
+
 
 #grid stuff onto focus timer center frame
 testLabel3= ctk.CTkLabel(timer_center_frame, text="timer frame test")
