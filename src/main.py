@@ -219,7 +219,7 @@ add_task_center_frame.place(relx=0.5, rely=0.5, anchor="center")
 taskHelpLabel = ctk.CTkLabel(add_task_center_frame, text="♡ Tasks may be <= 75 characters!\n♡ The maximum # of tasks is 5!", font=("times", 23))
 taskHelpLabel.pack(pady=30)
 
-taskEntry = ctk.CTkEntry(add_task_center_frame, width=200, justify="right", state="normal")
+taskEntry = ctk.CTkEntry(add_task_center_frame, width=200, justify="right", state="normal", fg_color="#ebbaca")
 taskEntry.pack(pady=10)
 
 #button that makes the real task
@@ -236,20 +236,58 @@ gotoAddTaskButton.pack(pady=20)
 backButton3=ctk.CTkButton(todo_center_frame, text="BACK", command=main_menu_frame.tkraise)
 backButton3.pack(pady=10)
 
-
-
-
-
-
-
-
-
-
-
-
+#now move onto timer implementation
 #grid stuff onto focus timer center frame
-testLabel3= ctk.CTkLabel(timer_center_frame, text="timer frame test")
-testLabel3.pack()
+testLabel3= ctk.CTkLabel(timer_center_frame, text="  ♡ TIMER ♡  ", font=titleFont)
+testLabel3.pack(pady=20)
+
+
+timerLabel = ctk.CTkLabel(timer_center_frame, text= " 00:00:00 ", font=("times", 30, "bold"))
+timerLabel.pack(pady=10)
+
+timer_hrs = 0
+timer_mins = 0
+def updateTimer():
+    timerLabel.configure(text=f" {timer_hrs:02}:{timer_mins:02}:00 ")
+    
+def addMin():
+    global timer_mins
+    timer_mins += 1
+    updateTimer()
+    
+def rmMin():
+    global timer_mins
+    if timer_mins > 0:
+        timer_mins -= 1
+        updateTimer()   
+    
+def addHr():
+    global timer_hrs
+    timer_hrs += 1
+    updateTimer()
+    
+def rmHr():
+    global timer_hrs
+    if timer_hrs > 0:
+        timer_hrs -= 1
+        updateTimer()
+    
+timerConfigureFrame = ctk.CTkFrame(timer_center_frame, border_width=10)
+timerConfigureFrame.pack(pady=10)
+
+upMinButton = ctk.CTkButton(timerConfigureFrame, text= "+1 Min", command=addMin)
+upMinButton.grid(row=0, column=0, padx=10, pady=10)
+
+downMinButton = ctk.CTkButton(timerConfigureFrame, text= "-1 Min", command=rmMin)
+downMinButton.grid(row=0, column=1, padx=10, pady=10)
+
+upHrButton = ctk.CTkButton(timerConfigureFrame, text="+1 Hr", command=addHr)
+upHrButton.grid(row=1, column=0, padx=10, pady=10)
+
+downHrButton = ctk.CTkButton(timerConfigureFrame, text="-1 Hr", command=rmHr)
+downHrButton.grid(row=1, column=1, padx=10, pady=10)
+
+
 backButton3=ctk.CTkButton(timer_center_frame, text="BACK", command=main_menu_frame.tkraise)
 backButton3.pack(pady=10)
 
