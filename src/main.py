@@ -21,7 +21,7 @@ root.columnconfigure(0, weight=1)
 
 
 #create all frames that will be used
-#use grid to allow overlapping, nsew to cover whole window
+#use grid to allow overlapping, sticky to cover whole window
 start_frame = ctk.CTkFrame(root)
 start_frame.grid(row=0, column=0, sticky="nsew")
 
@@ -51,10 +51,10 @@ showFrame(start_frame)
 start_center_frame = ctk.CTkFrame(start_frame, fg_color="transparent", border_width=0)
 start_center_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-#pack stuff onto center frame
-startLabel = ctk.CTkLabel(start_center_frame, text="     Welcome to Moni's     \n     Productivity App!!      ", font=titleFont)
+#pack widgets onto center frame
+startLabel = ctk.CTkLabel(start_center_frame, text="\n     Welcome to Moni's     \n     Productivity App!!      \n", font=titleFont)
 startLabel.pack(pady=40)
-startButton = ctk.CTkButton(start_center_frame, command=main_menu_frame.tkraise, text=" Click to start! ", font=bodyFont)
+startButton = ctk.CTkButton(start_center_frame, command=main_menu_frame.tkraise, text=" Click to start! ", font=("Times", 20), width=200)
 startButton.pack(pady=30)
 authorLabel = ctk.CTkLabel(start_center_frame, text=" created by moni_7000 ! ", font=("Times", 12))
 authorLabel.pack(pady=30)
@@ -64,7 +64,7 @@ authorLabel.pack(pady=30)
 main_center_frame = ctk.CTkFrame(main_menu_frame, fg_color="transparent", border_width=0)
 main_center_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-#pack stuff on main menu 
+#pack widgets on main menu 
 menuLabel = ctk.CTkLabel(main_center_frame, text="   MAIN MENU   ", font=titleFont)
 menuLabel.pack(pady=60)
 calcButton = ctk.CTkButton(main_center_frame, text="♡  CALCULATOR ♡", command=calculator_frame.tkraise, font=bodyFont)
@@ -85,7 +85,6 @@ timer_center_frame = ctk.CTkFrame(timer_frame, fg_color="transparent", border_wi
 timer_center_frame.place(relx=0.5, rely=0.5, anchor="center")
 
 #Now create the calculator display
-
 calc_entry = ctk.CTkEntry(calc_center_frame, width=175, justify="right", state="disabled")
 calc_entry.grid(row=1, column=0, columnspan=3)
 
@@ -242,37 +241,43 @@ testLabel3= ctk.CTkLabel(timer_center_frame, text="  ♡ TIMER ♡  ", font=titl
 testLabel3.pack(pady=20)
 
 
-timerLabel = ctk.CTkLabel(timer_center_frame, text= " 00:00:00 ", font=("times", 30, "bold"))
+timerLabel = ctk.CTkLabel(timer_center_frame, text= " 00:00:00 ", font=("times", 65, "bold"))
 timerLabel.pack(pady=10)
 
 timer_hrs = 0
 timer_mins = 0
+timer_sec = 0
+
 def updateTimer():
-    timerLabel.configure(text=f" {timer_hrs:02}:{timer_mins:02}:00 ")
-    
+    timerLabel.configure(text=f" {timer_hrs:02}:{timer_mins:02}:{timer_sec:02} ")
+
+timerStarted = False
+  
 def addMin():
     global timer_mins
-    timer_mins += 1
-    updateTimer()
+    if timer_mins <= 59 and not timerStarted:
+        timer_mins += 1
+        updateTimer()
     
 def rmMin():
     global timer_mins
-    if timer_mins > 0:
+    if timer_mins > 0 and not timerStarted:
         timer_mins -= 1
         updateTimer()   
     
 def addHr():
     global timer_hrs
-    timer_hrs += 1
-    updateTimer()
+    if not timerStarted:
+        timer_hrs += 1
+        updateTimer()
     
 def rmHr():
     global timer_hrs
-    if timer_hrs > 0:
+    if timer_hrs > 0 and not timerStarted:
         timer_hrs -= 1
         updateTimer()
     
-timerConfigureFrame = ctk.CTkFrame(timer_center_frame, border_width=10)
+timerConfigureFrame = ctk.CTkFrame(timer_center_frame, border_width=0)
 timerConfigureFrame.pack(pady=10)
 
 upMinButton = ctk.CTkButton(timerConfigureFrame, text= "+1 Min", command=addMin)
@@ -287,6 +292,55 @@ upHrButton.grid(row=1, column=0, padx=10, pady=10)
 downHrButton = ctk.CTkButton(timerConfigureFrame, text="-1 Hr", command=rmHr)
 downHrButton.grid(row=1, column=1, padx=10, pady=10)
 
+stopTimer = False
+
+def pressedStop():
+    if timerStarted:
+        global stopTimer
+        stopTimer = True
+  
+
+def startTimer():
+    global timer_hrs
+    global timer_mins
+    global timer_sec
+    global timerStarted
+    global stopTimer
+    
+    if not stopTimer:
+        timerStarted = True 
+        updateTimer()
+    
+        if timer_hrs <= 0 and timer_mins <= 0 and timer_sec <= 0:
+            timerStarted = False
+            return
+        if timer_sec <= 0:    
+            if timer_mins <= 0:
+                timer_hrs -= 1
+                timer_mins += 59
+                timer_sec = 59      
+            else:
+                timer_mins -= 1
+                timer_sec += 59
+        else:
+            timer_sec -= 1
+        timerLabel.after(1000, startTimer)
+    else:
+        timer_mins = 0
+        timer_sec = 0
+        timer_hrs = 0
+        timerStarted = False
+        stopTimer = False
+        updateTimer()
+        return
+
+
+
+startTimerButton = ctk.CTkButton(timerConfigureFrame, text=" START ", command=startTimer, width=50)
+startTimerButton.grid(row=2, column=0, columnspan=2,pady=10)
+
+stopTimerButton = ctk.CTkButton(timerConfigureFrame, text=" STOP ", command=pressedStop, width=50)
+stopTimerButton.grid(row=3, column=0, columnspan=2, pady=10)
 
 backButton3=ctk.CTkButton(timer_center_frame, text="BACK", command=main_menu_frame.tkraise)
 backButton3.pack(pady=10)
