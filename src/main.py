@@ -56,7 +56,7 @@ startLabel = ctk.CTkLabel(start_center_frame, text="\n     Welcome to Moni's    
 startLabel.pack(pady=40)
 startButton = ctk.CTkButton(start_center_frame, command=main_menu_frame.tkraise, text=" Click to start! ", font=("Times", 20), width=200)
 startButton.pack(pady=30)
-authorLabel = ctk.CTkLabel(start_center_frame, text=" created by moni_7000 ! ", font=("Times", 12))
+authorLabel = ctk.CTkLabel(start_center_frame, text=" created by Monica Ago ! ", font=("Times", 12))
 authorLabel.pack(pady=30)
 
 
@@ -76,7 +76,7 @@ focusButton.pack()
 
 #create and place all the center frames
 calc_center_frame = ctk.CTkFrame(calculator_frame, fg_color="#ffb0c0", border_width=3)
-calc_center_frame.place(relx=0.5, rely=0.5, anchor="center")
+calc_center_frame.place(relx=0.5, rely=0.45, anchor="center")
 
 todo_center_frame = ctk.CTkFrame(todo_frame, fg_color="transparent", border_width=0)
 todo_center_frame.place(relx=0.5, rely=0.5, anchor="center")
@@ -148,11 +148,18 @@ def calculate(val):
             calc_entry.configure(state="disabled")
 
 
+def clearCalc():
+    calc_entry.configure(state="normal")  
+    calc_entry.delete(0, "end")
+    calc_entry.configure(state="disabled")
 
 #Use a loop to create each button on the calculator
 for b_row, b_col, val in buttonsxy:
     myButton = ctk.CTkButton(calc_center_frame, width=50, text=val, command=lambda v=val: calculate(v))
     myButton.grid(row=b_row, column=b_col, padx=7, pady=13)
+
+clearButton = ctk.CTkButton(calculator_frame, text="CLEAR", command=clearCalc, width=100)
+clearButton.place(relx=0.5, rely=0.77, anchor="center")
 
 backButton1 = ctk.CTkButton(calculator_frame, text="BACK", command=main_menu_frame.tkraise)
 backButton1.place(relx=0.5, rely=0.85, anchor="center")
