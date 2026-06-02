@@ -158,12 +158,14 @@ for b_row, b_col, val in buttonsxy:
     myButton = ctk.CTkButton(calc_center_frame, width=50, text=val, command=lambda v=val: calculate(v))
     myButton.grid(row=b_row, column=b_col, padx=7, pady=13)
 
-clearButton = ctk.CTkButton(calculator_frame, text="CLEAR", command=clearCalc, width=100)
+clearButton = ctk.CTkButton(calculator_frame, text="CLEAR", command=clearCalc, width=100, border_width=0)
 clearButton.place(relx=0.5, rely=0.77, anchor="center")
 
 backButton1 = ctk.CTkButton(calculator_frame, text="BACK", command=main_menu_frame.tkraise)
 backButton1.place(relx=0.5, rely=0.85, anchor="center")
 
+if ctk.get_appearance_mode().lower() == "dark":
+    calc_center_frame.configure(fg_color = "#120f10")
 
 
 #Moving onto the Todo list
@@ -225,7 +227,7 @@ add_task_center_frame.place(relx=0.5, rely=0.5, anchor="center")
 taskHelpLabel = ctk.CTkLabel(add_task_center_frame, text="♡ Tasks may be <= 75 characters!\n♡ The maximum # of tasks is 5!", font=("times", 23))
 taskHelpLabel.pack(pady=30)
 
-taskEntry = ctk.CTkEntry(add_task_center_frame, width=200, justify="right", state="normal", fg_color="#ebbaca")
+taskEntry = ctk.CTkEntry(add_task_center_frame, width=200, justify="right", state="normal")
 taskEntry.pack(pady=10)
 
 #button that makes the real task
@@ -241,6 +243,7 @@ gotoAddTaskButton.pack(pady=20)
 
 backButton3=ctk.CTkButton(todo_center_frame, text="BACK", command=main_menu_frame.tkraise)
 backButton3.pack(pady=10)
+
 
 #now move onto timer implementation
 #grid stuff onto focus timer center frame

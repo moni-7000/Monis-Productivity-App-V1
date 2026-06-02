@@ -29,8 +29,8 @@
   "CTkEntry": {
     "corner_radius": 6,
     "border_width": 2,
-    "fg_color": ["#d993a1", "#343638"],
-    "border_color": ["#ffffff", "#565B5E"],
+    "fg_color": ["#f095b1", "#120f10"],
+    "border_color": ["#ffffff", "#f2799f"],
     "text_color": ["#ffffff", "gray84"],
     "placeholder_text_color": ["#ffffff", "gray62"]
   },
