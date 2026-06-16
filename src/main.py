@@ -1,6 +1,9 @@
 import customtkinter as ctk
 import textwrap
-import time 
+import time
+import sqlite3 
+from database import todoDatabase
+import pygame
 
 class App(ctk.CTk):
     def __init__(self):
@@ -8,9 +11,16 @@ class App(ctk.CTk):
         self.title("Moni's Productivity App")
         self.geometry("500x600+900+300")
         
+        #create database
+        self.db = todoDatabase()
+        
+        #create audio system
+        pygame.mixer.init()
+        self.menu_click_sound = pygame.mixer.Sound("audio/menuShine.mp3")
+        self.basic_click_sound = pygame.mixer.Sound("audio/basicClick.mp3")
+        self.alarm_sound = pygame.mixer.Sound("audio/alarmShine.mp3")
         #set theme
         ctk.set_default_color_theme("themes/theme.json")
-        ctk.set_appearance_mode("dark")
         
         #allow window stretching
         self.grid_rowconfigure(0, weight=1)
@@ -33,7 +43,7 @@ class App(ctk.CTk):
         self.calculator_frame = Calculator(self,self)
         self.calculator_frame.grid(row=0, column=0, sticky="nsew")
 
-        self.todo_frame = TodoList(self,self)
+        self.todo_frame = TodoList(self,self, database=self.db)
         self.todo_frame.grid(row=0, column=0, sticky="nsew")
 
         self.timer_frame = FocusTimer(self,self)
@@ -60,10 +70,11 @@ class StartScreen(ctk.CTkFrame):
         #pack widgets onto center frame
         startLabel = ctk.CTkLabel(self.start_center_frame, text="\n     Welcome to Moni's     \n     Productivity App!!      \n", font=self.controller.titleFont)
         startLabel.pack(pady=40)
-        startButton = ctk.CTkButton(self.start_center_frame, command= lambda: self.controller.main_menu_frame.tkraise(), text=" Click to start! ", font=("Times", 20), width=200)
+        startButton = ctk.CTkButton(self.start_center_frame, command= lambda: (self.controller.main_menu_frame.tkraise(), self.controller.menu_click_sound.play()), text=" Click to start! ", font=("Times", 20), width=200)
         startButton.pack(pady=30)
         authorLabel = ctk.CTkLabel(self.start_center_frame, text=" created by Monica Ago ! ", font=("Times", 12))
         authorLabel.pack(pady=30)
+    
         
 
 class MainMenu(ctk.CTkFrame):
@@ -78,12 +89,24 @@ class MainMenu(ctk.CTkFrame):
         #pack widgets on main menu 
         menuLabel = ctk.CTkLabel(self.main_center_frame, text="   MAIN MENU   ", font=self.controller.titleFont)
         menuLabel.pack(pady=60)
-        calcButton = ctk.CTkButton(self.main_center_frame, text="♡  CALCULATOR ♡", command= lambda: self.controller.calculator_frame.tkraise(), font=self.controller.bodyFont)
+        calcButton = ctk.CTkButton(self.main_center_frame, text="♡  CALCULATOR ♡", command= lambda: (self.controller.calculator_frame.tkraise(), self.controller.basic_click_sound.play()), font=self.controller.bodyFont)
         calcButton.pack()
-        todoButton = ctk.CTkButton(self.main_center_frame, text="♡  TO-DO LIST  ♡", command= lambda: self.controller.todo_frame.tkraise(), font=self.controller.bodyFont)
+        todoButton = ctk.CTkButton(self.main_center_frame, text="♡  TO-DO LIST  ♡", command= lambda: (self.controller.todo_frame.tkraise(), self.controller.basic_click_sound.play()), font=self.controller.bodyFont)
         todoButton.pack(pady=50)
-        focusButton = ctk.CTkButton(self.main_center_frame, text="♡  FOCUS TIMER  ♡", command= lambda: self.controller.timer_frame.tkraise(), font=self.controller.bodyFont)
+        focusButton = ctk.CTkButton(self.main_center_frame, text="♡  FOCUS TIMER  ♡", command= lambda: (self.controller.timer_frame.tkraise(), self.controller.basic_click_sound.play()), font=self.controller.bodyFont)
         focusButton.pack()
+        themeButton = ctk.CTkButton(self.main_center_frame, text=" CHANGE THEME ", command = self.changeTheme, font=self.controller.bodyFont)
+        themeButton.pack(pady=50)
+        
+    def changeTheme(self):
+        if ctk.get_appearance_mode() == "Dark":
+            ctk.set_appearance_mode("Light")
+            self.controller.todo_frame.taskFrame.configure(fg_color="#de6f92")
+            self.controller.calculator_frame.calc_center_frame.configure(fg_color="#ffb0c0")
+        else:
+            ctk.set_appearance_mode("Dark")
+            self.controller.todo_frame.taskFrame.configure(fg_color="#542134")
+            self.controller.calculator_frame.calc_center_frame.configure(fg_color="#120f10")
         
 
         
@@ -127,12 +150,12 @@ class Calculator(ctk.CTkFrame):
         clearButton = ctk.CTkButton(self, text="CLEAR", command=self.clearCalc, width=100, border_width=0)
         clearButton.place(relx=0.5, rely=0.77, anchor="center")
 
-        backButton1 = ctk.CTkButton(self, text="BACK", command= lambda:self.controller.main_menu_frame.tkraise())
+        backButton1 = ctk.CTkButton(self, text="BACK", command= lambda:(self.controller.main_menu_frame.tkraise(), self.controller.basic_click_sound.play()))
         backButton1.place(relx=0.5, rely=0.85, anchor="center")
 
             
     def calculate(self, val):
-        
+        #preform calculations based on user input
         operators = ["/", "+", "-", "*"]
 
     
@@ -153,19 +176,22 @@ class Calculator(ctk.CTkFrame):
                             self.negative = True  
             elif(val == "."):
                 text = self.calc_entry.get()
-            
+                
+                #have default at 0 incase its the first number (no operators yet)
+                index = 0
+                #find index of latest operator
                 for i in range (len(text) -1, -1, -1):
                     if text[i] in operators:
                         index = i
                         break
-                
+                #do not allow more decimals if already present
                 if ("." in text[index+1:]):
                     pass
                 else:
                     self.calc_entry.configure(state="normal")
                     self.calc_entry.insert("end", str(val))
                     self.calc_entry.configure(state="disabled")
-                
+                        
             else:
                 self.calc_entry.configure(state="normal")
                 self.calc_entry.insert("end", str(val))
@@ -174,7 +200,7 @@ class Calculator(ctk.CTkFrame):
             if (val == "="):
         
                 result = self.calc_entry.get()
-        
+                #catch errors when user attempts to calculate
                 try:
                     answer = eval(self.calc_entry.get())
                     self.calc_entry.configure(state="normal")  
@@ -207,15 +233,18 @@ class Calculator(ctk.CTkFrame):
                 self.negative = False
                     
     def clearCalc(self):
+        #clears current input in calculator
         self.calc_entry.configure(state="normal")  
         self.calc_entry.delete(0, "end")
         self.calc_entry.configure(state="disabled")
         
         
 class TodoList(ctk.CTkFrame):
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, database):
         super().__init__(parent)
         self.controller = controller
+        #create database
+        self.db = database 
         
         self.todo_center_frame = ctk.CTkFrame(self, fg_color="transparent", border_width=0)
         self.todo_center_frame.place(relx=0.5, rely=0.5, anchor="center")
@@ -236,16 +265,44 @@ class TodoList(ctk.CTkFrame):
         self.maxTaskLen = 100
         #current row to add a new task (no overlapping)
         self.taskRow = 0
+        
         #the button that takes you to the frame to make the task
         self.gotoAddTaskButton = ctk.CTkButton(self.todo_center_frame, text=" ADD TASK", font=self.controller.bodyFont, command= lambda:self.controller.addTask_Frame.tkraise())
         self.gotoAddTaskButton.pack(pady=20)
 
-        backButton3=ctk.CTkButton(self.todo_center_frame, text="BACK", command= lambda:self.controller.main_menu_frame.tkraise())
+        backButton3=ctk.CTkButton(self.todo_center_frame, text="BACK", command= lambda:(self.controller.main_menu_frame.tkraise(), self.controller.basic_click_sound.play()))
         backButton3.pack(pady=10)
         
+        #automatically load any existing tasks
+        self.load_tasks()
+        
+        
+    def load_tasks(self):
+        for task_id, task_text in self.db.fetch_tasks():
+            
+            #create a frame to hold the task label and done button together
+            rowFrame = ctk.CTkFrame(self.taskFrame, fg_color = "transparent", border_width=0)
+            rowFrame.grid(row=self.taskRow, column=0, columnspan=3, padx=10, pady=5, sticky="ew")
+            
+            rowFrame.grid_columnconfigure(0, weight=1)
+            rowFrame.grid_columnconfigure(1,weight=0)
+            
+            #put label and button inside row frame
+            newTask = ctk.CTkLabel(rowFrame, text=task_text, anchor="center")
+            newTask.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+    
+            doneButton= ctk.CTkButton(rowFrame, text="✓", width = 20)
+            doneButton.configure(command= lambda t_id=task_id, frame=rowFrame: (self.db.remove_task(t_id), frame.destroy(), self.taskRemoved()))
+            doneButton.grid(row=0, column=1, padx=10, pady=10, sticky="e")
+
+            self.taskRow += 1
+            self.taskCount += 1
+     
         
     def taskRemoved(self):
         self.taskCount -= 1
+        self.taskRow -= 1
+
 
     def addTask(self):
     
@@ -265,14 +322,25 @@ class TodoList(ctk.CTkFrame):
             
         else:
             self.controller.addTask_Frame.taskEntry.delete(0, "end")
+
+            #save to todoDatabase and store ID
+            task_id = self.db.insert_task(wrappedTask)
+            
+            #create a frame to hold the task label and done button together
+            rowFrame = ctk.CTkFrame(self.taskFrame, fg_color = "transparent", border_width=0)
+            rowFrame.grid(row=self.taskRow, column=0, columnspan=3, padx=10, pady=5, sticky="ew")
+            
+            rowFrame.grid_columnconfigure(0, weight=1)
+            rowFrame.grid_columnconfigure(1,weight=0)
+            
+            #put label and button inside row frame
+            newTask = ctk.CTkLabel(rowFrame, text=wrappedTask, anchor="center")
+            newTask.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
     
-            newTask = ctk.CTkLabel(self.taskFrame, text=wrappedTask)
-            newTask.grid(row=self.taskRow, column=0, padx=10, pady=10, sticky="w")
-    
-            doneButton= ctk.CTkButton(self.taskFrame, text="✓", width = 20)
-            doneButton.configure(command= lambda label=newTask, btn= doneButton: (label.destroy(), btn.destroy(), self.taskRemoved()))
-            doneButton.grid(row=self.taskRow, column=1, padx=10, pady=10)
-    
+            doneButton= ctk.CTkButton(rowFrame, text="✓", width = 20)
+            doneButton.configure(command= lambda t_id=task_id, frame=rowFrame: (self.db.remove_task(t_id), frame.destroy(), self.taskRemoved()))
+            doneButton.grid(row=0, column=1, padx=10, pady=10, sticky="e")
+
             self.taskRow += 1
             self.taskCount += 1
         
@@ -296,7 +364,7 @@ class AddTaskScreen(ctk.CTkFrame):
         createTaskButton = ctk.CTkButton(self.add_task_center_frame, text=" ADD TO TASK LIST ", command= lambda: self.controller.todo_frame.addTask())
         createTaskButton.pack(pady=30)
 
-        backButton2=ctk.CTkButton(self.add_task_center_frame, text="BACK", command= lambda:self.controller.todo_frame.tkraise())
+        backButton2=ctk.CTkButton(self.add_task_center_frame, text="BACK", command= lambda:(self.controller.main_menu_frame.tkraise(), self.controller.basic_click_sound.play()))
         backButton2.pack(pady=10)
     
                 
@@ -326,7 +394,7 @@ class FocusTimer(ctk.CTkFrame):
         
         self.makeTimerButtons()
         
-        self.backButton3=ctk.CTkButton(self.timer_center_frame, text="BACK", command= lambda: self.controller.main_menu_frame.tkraise())
+        self.backButton3=ctk.CTkButton(self.timer_center_frame, text="BACK", command= lambda:(self.controller.main_menu_frame.tkraise(), self.controller.basic_click_sound.play()))
         self.backButton3.pack(pady=10)
         
         self.timerStarted = False
@@ -389,6 +457,7 @@ class FocusTimer(ctk.CTkFrame):
         
             if self.timer_hrs <= 0 and self.timer_mins <= 0 and self.timer_sec <= 0:
                 self.timerStarted = False
+                self.controller.alarm_sound.play()
                 return
             if self.timer_sec <= 0:    
                 if self.timer_mins <= 0:
